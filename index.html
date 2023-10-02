@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lab 4: Population Density in Chicago</title>
+
+         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+           crossorigin=""/>
+
+         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+           crossorigin=""></script>
+
+         <style type="text/css">
+          html, body { margin: 0; padding: 0; height: 100%; }
+          #map { min-height: 100%; }
+        </style>
+
+        <script type="text/javascript" src="data.js"></script>
+
+        <style>
+          /* Optional: adjust the values below to change the appearance of the legend */
+          .legend {
+              padding: 6px 8px;
+              line-height: 18px;
+              background: rgba(255,255,255,0.9);
+              box-shadow: 0 0 15px rgba(0,0,0,0.2);
+              border-radius: 5px;
+          }
+
+           /* Optional: adjust the values below to change the appearance of the legend color boxes */
+           .legend i {
+              width: 18px;
+              height: 18px;
+              float: left;
+              margin-right: 8px;
+              opacity: 0.7;
+          }
+        </style>
+
+        <link rel="icon" href="bean.png" >
+
+    </head>
+
+    <body>
+
+        <h2 style="color:orange; font-weight:bold; text-align:center">Population Density in Chicago</h2>
+
+        <div id="map"></div>
+
+        <script type="text/javascript">
+
+          var map = L.map('map', {
+              center: [41.8337329,-87.7319639],
+              zoom: 11
+          });
+
+          var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+              maxZoom: 17,
+              attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+            }).addTo(map);
+
+          var DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: 'abcd',
+          maxZoom: 20
+          });
+
+           var neighborhoodIcon = L.icon({
+              iconUrl: 'neighborhoodpin.png', // url that links to the icon image file
+              iconSize:     [30, 30], // size of the icon image in pixels
+              iconAnchor:   [5, 15], // the top left corner of the icon will be aligned so that this point is at the marker's geographical location
+              popupAnchor:  [0, -10] // point from which the popup should open, relative to the iconAnchor
+          });
+
+            var edgewater = L.marker([41.9882722,-87.6659143],{icon: neighborhoodIcon}); 
+            lakeview    = L.marker([41.9444734,-87.6543484],{icon: neighborhoodIcon}); 
+            rogerspark     = L.marker([42.0105067,-87.674243],{icon: neighborhoodIcon}); 
+            nearnorthside    = L.marker([41.9006043,-87.6320907],{icon: neighborhoodIcon});
+
+            
+           var pic1 = '<center><img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Edgewater_Beach_Chicago.JPG" alt="Edgewater" width="250"></center>';
+           var pic2 = '<center><img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Wrigleyville.jpg" alt="Lakeview" width="250"></center>';
+           var pic3 = '<center><img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/North_Sheridan_Corridor.JPG" alt="Rogers Park" width="250"></center>';
+           var pic4 = '<center><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Summer_Morning_in_Chicago_%2830791823248%29_%28cropped%29.jpg/1920px-Summer_Morning_in_Chicago_%2830791823248%29_%28cropped%29.jpg" alt="Near North Side" width="250"></center>';
+
+          edgewater.bindPopup('<h4 style="color:orange; font-weight:bold; text-align:center">Edgewater: 12,557 People/Square Kilometer</h4>' + pic1);
+          lakeview.bindPopup('<h4 style="color:orange; font-weight:bold; text-align:center"> Lakeview: 11,647 People/Square Kilometer</h4>' + pic2);
+          rogerspark.bindPopup('<h4 style="color:orange; font-weight:bold; text-align:center"> Rogers Park: 11,547 People/Square Kilometer</h4>' + pic3);
+          nearnorthside.bindPopup('<h4 style="color:orange; font-weight:bold; text-align:center"> Near North Side: 11,298 People/Square Kilometer</h4>' + pic4);
+
+           function getColor(value) {
+              return value > 8257 ? '#993404':
+                     value > 5368  ? '#d95f0e':
+                     value > 3852  ? '#fe9929':
+                     value > 1847  ? '#fed98e':
+                                     '#ffffd4';
+          }
+
+          function style(feature){
+            return {
+                fillColor: getColor(feature.properties.PopDen),   
+                weight: 2,
+                opacity: 1,
+                color: 'black',
+                fillOpacity: 0.9
+            };
+        }
+
+        var density = L.geoJson(data, {style:style}).addTo(map);
+
+        var neighborhoods = L.layerGroup([edgewater, lakeview, rogerspark, nearnorthside]);
+
+        var legend = L.control({position: 'bottomright'}); 
+
+        legend.onAdd = function (map) {
+
+            var div = L.DomUtil.create('div', 'legend'),
+                grades = [0, 1847, 3852, 5368, 8257]; 
+
+            div.innerHTML = '<b><center>Population Density in 2010 </center><br></b>'; 
+
+            for (var i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                '<i style="background:' + getColor(grades[i] + 1) + '"></i>' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+
+            return div;
+        };
+
+        legend.addTo(map);
+
+        var basemaps = {
+            "Traffic View": OpenTopoMap,
+            "Night Map": DarkMatter
+        };
+
+        var overlaymaps = {
+            "Chicago Population Density": density,
+            "Neighborhoods with the Highest Population Density": neighborhoods 
+        };
+
+        L.control.layers(basemaps, overlaymaps).addTo(map);
+
+        // Removing the legend when the layer is removed
+        map.on('overlayremove', function(eventLayer){
+          if (eventLayer.name == 'Chicago Population Density'){ 
+            map.removeControl(legend); 
+          }
+        });
+
+        // Adding the legend when the layer is added
+        map.on('overlayadd', function(eventLayer){
+          if (eventLayer.name == 'Chicago Population Density'){
+            legend.addTo(map);
+          }
+        });
+
+
+
+        </script>
+   </body>
+</html>
